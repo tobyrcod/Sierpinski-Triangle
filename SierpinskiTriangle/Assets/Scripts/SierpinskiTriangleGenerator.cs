@@ -1,12 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class SierpinskiTriangleGenerator : MonoBehaviour
 {
     [SerializeField] private float _radius;
+    [SerializeField] private bool _shouldDebug;
 
     private Mesh _mesh;
     private MeshFilter _meshFilter;
@@ -35,7 +37,6 @@ public class SierpinskiTriangleGenerator : MonoBehaviour
         {
             float x = r * Mathf.Cos(theta * Mathf.Deg2Rad);
             float y = r * Mathf.Sin(theta * Mathf.Deg2Rad);
-            Debug.Log(new Vector3(x, y));
             vertices[i] = new Vector3(x, y);
 
             theta -= 120;
@@ -65,17 +66,28 @@ public class SierpinskiTriangleGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             NextGeneration();
+            StringBuilder sb = new StringBuilder();
+            sb.Append("[");
+            for (int i = 0; i < _mesh.triangles.Length; i++)
+            {
+                if (i != 0)
+                    sb.Append(", ");
+
+                int t = _mesh.triangles[i];
+                sb.Append($"{t + 1}");
+            }
+            sb.Append("]");
+            Debug.Log(sb.ToString());
         }
     }
 
     private void NextGeneration()
     {
         Vector3[] oldVertices = _mesh.vertices;
-        Vector3[] newVertices = new Vector3[oldVertices.Length * 2];
-        Array.Copy(oldVertices, newVertices, oldVertices.Length);
+        List<Vector3> newVertices = new List<Vector3>(oldVertices);
 
         int[] oldTriangles = _mesh.triangles;
-        int[] newTriangles = new int[oldTriangles.Length * 3];
+        List<int> newTriangles = new List<int>();
 
         // For every triangle
         for (int i = 0; i < oldTriangles.Length; i += 3)
@@ -97,27 +109,46 @@ public class SierpinskiTriangleGenerator : MonoBehaviour
             Vector3 v6 = (v3 + v1) / 2;
 
             // Get the indices of the new vertices
-            int t4 = oldVertices.Length + i / 3;
+            int t4 = newVertices.Count;
             int t5 = t4 + 1;
             int t6 = t5 + 1;
 
             // Add the new vertices to the mesh
-            newVertices[t4] = v4;
-            newVertices[t5] = v5;
-            newVertices[t6] = v6;
+            newVertices.Add(v4);
+            newVertices.Add(v5);
+            newVertices.Add(v6);
 
-            _mesh.vertices = newVertices;
+            // Create the new triangles
+            // First Triangle
+            AddTriangle(ref newTriangles, t1, t4, t6);
+            // Second Triangle
+            AddTriangle(ref newTriangles, t4, t2, t5);
+            // Third Triangle
+            AddTriangle(ref newTriangles, t6, t5, t3);
+
+            _mesh.vertices = newVertices.ToArray();
+            _mesh.triangles = newTriangles.ToArray();
         }
+    }
+
+    private void AddTriangle(ref List<int> triangles, int t1, int t2, int t3)
+    {
+        triangles.Add(t1);
+        triangles.Add(t2);
+        triangles.Add(t3);
     }
 
     private void OnDrawGizmos()
     {
-        if (_mesh != null)
+        if (_shouldDebug)
         {
-            foreach (Vector3 v in _mesh.vertices)
+            if (_mesh != null)
             {
-                Gizmos.color = Color.red;
-                Gizmos.DrawSphere(v, 0.2f);
+                foreach (Vector3 v in _mesh.vertices)
+                {
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawSphere(v, 0.2f);
+                }
             }
         }
     }

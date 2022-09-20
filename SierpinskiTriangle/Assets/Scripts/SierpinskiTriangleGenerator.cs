@@ -39,6 +39,13 @@ public class SierpinskiTriangleGenerator : MonoBehaviour
             theta -= 120;
         }
 
+        // Offset the Triangle from 'center' to 'vertical middle'
+        float offset = r * (1 - Mathf.Sin(30 * Mathf.Deg2Rad)) / 2;
+        for (int i = 0; i < 3; i++)
+        {
+            vertices[i] -= Vector3.up * offset;
+        }
+
         // Set the first (and only) triangle to be the first 3 (and only) vertices
         triangles[0] = 0;
         triangles[1] = 1;

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using DG.Tweening;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class SierpinskiTriangleGenerator : MonoBehaviour
@@ -78,6 +79,17 @@ public class SierpinskiTriangleGenerator : MonoBehaviour
             }
             sb.Append("]");
             Debug.Log(sb.ToString());
+        }
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            Camera cam = Camera.main;
+            float duration = 15f;
+
+            cam.orthographicSize = 0.09f;
+            cam.DOOrthoSize(5f, duration);
+            cam.transform.DOMoveY(1.5f, 0f);
+            cam.transform.DOMoveY(0f, duration);
         }
     }
 
